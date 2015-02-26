@@ -25,7 +25,7 @@ class Thesaurus
   def to_alfred
     "<?xml version='1.0'?><items>\n%s\n</items>" %
     @results.map do |result|
-      formatItem(result['synonyms'], result['category'])
+      formatItem(result['synonyms'].gsub('|', ', '), result['category'])
     end.join("\n")
   end
 
