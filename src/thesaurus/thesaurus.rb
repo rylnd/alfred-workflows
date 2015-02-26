@@ -17,19 +17,31 @@ class Thesaurus
     raw_response = Net::HTTP.get(URI(@url))
     results = JSON.parse(raw_response)['response'] rescue []
 
-    @results = results.map { |result| result['list'] }
+    @results = split_results(results)
 
     self
   end
 
   def to_alfred
     "<?xml version='1.0'?><items>\n%s\n</items>" %
-    @results.map do |result|
-      formatItem(result['synonyms'].gsub('|', ', '), result['category'])
+    @results.map do |category, synonyms|
+      synonyms.map do |synonym|
+        formatItem(synonym, category)
+      end
     end.join("\n")
   end
 
   private
+
+  def split_results(results)
+    results.map do |result|
+      list = result['list']
+      category = list['category'].tr('()', '')
+      synonyms = list['synonyms'].split('|')
+
+      [category, synonyms]
+    end
+  end
 
   def formatItem(title, subtitle)
     title = escape(title)
