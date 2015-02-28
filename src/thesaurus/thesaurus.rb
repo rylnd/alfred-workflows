@@ -10,6 +10,8 @@ class Thesaurus
   def initialize(word)
     @word = word
     @url = "#{BASE_URL}&word=#{word}"
+
+    get_synonyms
   end
 
   def get_synonyms
@@ -17,8 +19,6 @@ class Thesaurus
     results = JSON.parse(raw_response)['response'] || [] rescue []
 
     @synonyms = results.map { |result| result['list'] }
-
-    self
   end
 
   def to_alfred
@@ -55,6 +55,4 @@ class Thesaurus
   end
 end
 
-puts Thesaurus.new('{query}')
-  .get_synonyms
-  .to_alfred
+puts Thesaurus.new('{query}').to_alfred
