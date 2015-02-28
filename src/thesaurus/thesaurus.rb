@@ -10,28 +10,34 @@ class Thesaurus
   def initialize(word)
     @word = word
     @url = "#{BASE_URL}&word=#{word}"
-    @results = []
+
+    get_synonyms
   end
 
   def get_synonyms
     raw_response = Net::HTTP.get(URI(@url))
-    results = JSON.parse(raw_response)['response'] rescue []
+    results = JSON.parse(raw_response)['response'] || [] rescue []
 
-    @results = results.map { |result| result['list'] }
-
-    self
+    @synonyms = results.map { |result| result['list'] }
   end
 
   def to_alfred
-    "<?xml version='1.0'?><items>\n%s\n</items>" %
-    @results.map do |result|
-      formatItem(result['synonyms'].gsub('|', ', '), result['category'])
-    end.join("\n")
+    "<?xml version='1.0'?><items>
+    #{alfred_results}
+    </items>"
   end
 
   private
 
-  def formatItem(title, subtitle)
+  def alfred_results
+    synonyms = @synonyms.map do |result|
+      formatItem(result['synonyms'].gsub('|', ', '), result['category'])
+    end
+
+    synonyms.any? ? synonyms.join("\n") : formatItem("No results for '#{@word}'")
+  end
+
+  def formatItem(title, subtitle='')
     title = escape(title)
     subtitle = escape(subtitle)
 
@@ -49,6 +55,4 @@ class Thesaurus
   end
 end
 
-puts Thesaurus.new("{query}")
-  .get_synonyms
-  .to_alfred
+puts Thesaurus.new('{query}').to_alfred
